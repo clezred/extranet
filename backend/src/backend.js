@@ -11,7 +11,7 @@ const PORT = 5000;
 
 const db = require('./database');
 
-const storage = multer.diskStorage({
+const avatarStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/avatars/');
   },
@@ -22,7 +22,19 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage: storage });
+const productStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/products/');
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const uniqueName = `${crypto.randomUUID()}${ext}`;
+    cb(null, uniqueName);
+  }
+});
+
+const uploadAvatar = multer({ storage: avatarStorage });
+const uploadProductImage = multer({ storage: productStorage });
 
 app.use('/uploads', express.static('uploads'));
 
@@ -190,7 +202,7 @@ app.get('/api/profile', verifyToken, (req, res) => {
 })
 
 // Update profile 
-app.post('/api/profile/update', verifyToken, upload.single('avatar'), (req, res) => {
+app.post('/api/profile/update', verifyToken, uploadAvatar.single('avatar'), (req, res) => {
   const userId = req.user.userId;
   const { id, name, surname, email, removeAvatar } = req.body;
 
@@ -251,8 +263,8 @@ app.get('/api/products', (req, res) => {
 });
 
 // Products create
-app.post('/api/products', verifyToken, (req, res) => {
-  const { name, imagePath, description } = req.body;
+app.post('/api/products', verifyToken, uploadProductImage.single('image'), (req, res) => {
+  const { name, description } = req.body;
   const ownerId = req.user.userId;
 
   if (!name) {
@@ -260,16 +272,17 @@ app.post('/api/products', verifyToken, (req, res) => {
   }
 
   const createdAt = new Date().toISOString();
+  const imagePath = req.file ? `/uploads/products/${req.file.filename}` : null;
   const query = `INSERT INTO products (name, image_path, description, created_at, owner_id)
     VALUES (?, ?, ?, ?, ?)`;
 
-  db.run(query, [name, imagePath || null, description || null, createdAt, ownerId], function(err) {
+  db.run(query, [name, imagePath, description || null, createdAt, ownerId], function(err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({
       success: true,
       id: this.lastID,
       name,
-      image_path: imagePath || null,
+      image_path: imagePath,
       description: description || null,
       created_at: createdAt,
       owner_id: ownerId
@@ -278,12 +291,13 @@ app.post('/api/products', verifyToken, (req, res) => {
 });
 
 // Products update
-app.put('/api/products/:id', verifyToken, (req, res) => {
+app.put('/api/products/:id', verifyToken, uploadProductImage.single('image'), (req, res) => {
   const productId = req.params.id;
-  const { name, imagePath, description } = req.body;
+  const { name, description } = req.body;
   const ownerId = req.user.userId;
+  const imagePath = req.file ? `/uploads/products/${req.file.filename}` : undefined;
 
-  if (!name && !imagePath && !description) {
+  if (!name && imagePath === undefined && !description) {
     return res.status(400).json({ error: 'No fields to update.' });
   }
 

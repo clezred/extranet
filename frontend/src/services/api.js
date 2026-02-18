@@ -124,20 +124,68 @@ export const productService = {
     return apiCall('/products');
   },
 
-  create: async (name, imagePath, description) => {
-    return apiCall('/products', {
+  create: async (name, imageFile, description) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+
+    const formData = new FormData();
+    formData.append('name', name);
+    if (description) {
+      formData.append('description', description);
+    }
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/products`, {
       method: 'POST',
-      requiresAuth: true,
-      body: { name, imagePath, description }
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
     });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'API error');
+    }
+
+    return response.json();
   },
 
-  update: async (id, name, imagePath, description) => {
-    return apiCall(`/products/${id}`, {
+  update: async (id, name, imageFile, description) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+
+    const formData = new FormData();
+    if (name) {
+      formData.append('name', name);
+    }
+    if (description) {
+      formData.append('description', description);
+    }
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
       method: 'PUT',
-      requiresAuth: true,
-      body: { name, imagePath, description }
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
     });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'API error');
+    }
+
+    return response.json();
   },
 
   remove: async (id) => {

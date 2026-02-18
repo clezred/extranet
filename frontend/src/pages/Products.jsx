@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { productService, profileService, ASSET_BASE_URL } from '../services/api';
 import './Products.css';
@@ -9,9 +9,11 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ name: '', imagePath: '', description: '' });
+  const [form, setForm] = useState({ name: '', description: '', imageFile: null });
   const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({ name: '', imagePath: '', description: '' });
+  const [editForm, setEditForm] = useState({ name: '', description: '', imageFile: null });
+  const createFileRef = useRef(null);
+  const editFileRef = useRef(null);
   const navigate = useNavigate();
 
   const resolveImageUrl = useMemo(() => {
@@ -53,9 +55,19 @@ export default function Products() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setForm((prev) => ({ ...prev, imageFile: file }));
+  };
+
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditFileChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setEditForm((prev) => ({ ...prev, imageFile: file }));
   };
 
   const handleCreate = async (e) => {
@@ -71,11 +83,14 @@ export default function Products() {
     try {
       const created = await productService.create(
         form.name.trim(),
-        form.imagePath.trim() || null,
+        form.imageFile,
         form.description.trim() || null
       );
       setProducts((prev) => [created, ...prev]);
-      setForm({ name: '', imagePath: '', description: '' });
+      setForm({ name: '', description: '', imageFile: null });
+      if (createFileRef.current) {
+        createFileRef.current.value = '';
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -87,14 +102,20 @@ export default function Products() {
     setEditingId(product.id);
     setEditForm({
       name: product.name || '',
-      imagePath: product.image_path || '',
-      description: product.description || ''
+      description: product.description || '',
+      imageFile: null
     });
+    if (editFileRef.current) {
+      editFileRef.current.value = '';
+    }
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setEditForm({ name: '', imagePath: '', description: '' });
+    setEditForm({ name: '', description: '', imageFile: null });
+    if (editFileRef.current) {
+      editFileRef.current.value = '';
+    }
   };
 
   const handleUpdate = async (productId) => {
@@ -110,18 +131,22 @@ export default function Products() {
       await productService.update(
         productId,
         editForm.name.trim(),
-        editForm.imagePath.trim() || null,
+        editForm.imageFile,
         editForm.description.trim() || null
       );
-      setProducts((prev) => prev.map((item) => {
-        if (item.id !== productId) return item;
-        return {
-          ...item,
-          name: editForm.name.trim(),
-          image_path: editForm.imagePath.trim() || null,
-          description: editForm.description.trim() || null
-        };
-      }));
+      if (editForm.imageFile) {
+        const list = await productService.list();
+        setProducts(list);
+      } else {
+        setProducts((prev) => prev.map((item) => {
+          if (item.id !== productId) return item;
+          return {
+            ...item,
+            name: editForm.name.trim(),
+            description: editForm.description.trim() || null
+          };
+        }));
+      }
       cancelEdit();
     } catch (err) {
       setError(err.message);
@@ -174,14 +199,14 @@ export default function Products() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="imagePath">Image path or URL</label>
+            <label htmlFor="image">Product image</label>
             <input
-              id="imagePath"
-              name="imagePath"
-              type="text"
-              value={form.imagePath}
-              onChange={handleChange}
-              placeholder="/uploads/products/example.png or https://..."
+              id="image"
+              name="image"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              ref={createFileRef}
             />
           </div>
           <div className="form-group">
@@ -245,13 +270,14 @@ export default function Products() {
                           />
                         </div>
                         <div className="form-group">
-                          <label htmlFor={`edit-image-${product.id}`}>Image path or URL</label>
+                          <label htmlFor={`edit-image-${product.id}`}>Product image</label>
                           <input
                             id={`edit-image-${product.id}`}
-                            name="imagePath"
-                            type="text"
-                            value={editForm.imagePath}
-                            onChange={handleEditChange}
+                            name="image"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleEditFileChange}
+                            ref={editFileRef}
                           />
                         </div>
                         <div className="form-group">
