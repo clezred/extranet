@@ -21,5 +21,5 @@ services:
       - /app/node_modules
       - ./backend/uploads:/app/uploads
     environment:
-      - CORS_ORIGINS=http://10.1.0.32:80
+      - CORS_ORIGINS=http://10.1.0.32
       - PUBLIC_BASE_URL=http://10.1.0.32:5000
