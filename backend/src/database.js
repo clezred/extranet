@@ -55,19 +55,22 @@ db.serialize(() => {
   });
 
   // Required users for Pentest
-  const stmtU1 = db.prepare("INSERT OR IGNORE INTO users (username, name) VALUES (?, ?)");
-  stmtU1.run("user1", "Utilisateur1");
+  const stmtU1 = db.prepare("INSERT OR IGNORE INTO users (username, name, email) VALUES (?, ?, ?)");
+  stmtU1.run("user1@demo.fr", "Utilisateur1", "user1@demo.fr");
   stmtU1.finalize();
 
-  const stmtU2 = db.prepare("INSERT OR IGNORE INTO users (username, name) VALUES (?, ?)");
-  stmtU2.run("user2", "Utilisateur2");
+  const stmtU2 = db.prepare("INSERT OR IGNORE INTO users (username, name, email) VALUES (?, ?, ?)");
+  stmtU2.run("user2@demo.fr", "Utilisateur2", "user2@demo.fr");
   stmtU2.finalize();
 
-  const passwordClairU = "user123";
+  const passwordClairU1 = "user1@demo.fr";
+  const passwordClairU2 = "user2@demo.fr";
 
-  bcrypt.hash(passwordClairU, saltRounds, (err, hash) => {
-    db.run("UPDATE users SET password =  ? WHERE username = ?", [hash, "user1"]);
-    db.run("UPDATE users SET password =  ? WHERE username = ?", [hash, "user2"]);
+  bcrypt.hash(passwordClairU1, saltRounds, (err, hash) => {
+    db.run("UPDATE users SET password =  ? WHERE username = ?", [hash, "user1@demo.fr"]);
+  });
+  bcrypt.hash(passwordClairU2, saltRounds, (err, hash) => {
+    db.run("UPDATE users SET password =  ? WHERE username = ?", [hash, "user2@demo.fr"]);
   });
 });
 

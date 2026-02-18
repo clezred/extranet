@@ -12,6 +12,9 @@ export default function Products() {
   const [form, setForm] = useState({ name: '', description: '', imageFile: null });
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', description: '', imageFile: null });
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const [toastFading, setToastFading] = useState(false);
   const createFileRef = useRef(null);
   const editFileRef = useRef(null);
   const navigate = useNavigate();
@@ -49,6 +52,19 @@ export default function Products() {
 
     loadProducts();
   }, [navigate]);
+
+  useEffect(() => {
+    if (!showToast) return;
+    const timer = setTimeout(() => {
+      setToastFading(true);
+      setTimeout(() => {
+        setShowToast(false);
+        setToastFading(false);
+      }, 300);
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, [showToast]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -91,6 +107,8 @@ export default function Products() {
       if (createFileRef.current) {
         createFileRef.current.value = '';
       }
+      setToastMessage('Product created');
+      setShowToast(true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -148,6 +166,8 @@ export default function Products() {
         }));
       }
       cancelEdit();
+      setToastMessage('Product updated');
+      setShowToast(true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -167,11 +187,21 @@ export default function Products() {
       if (editingId === productId) {
         cancelEdit();
       }
+      setToastMessage('Product deleted');
+      setShowToast(true);
     } catch (err) {
       setError(err.message);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCloseToast = () => {
+    setToastFading(true);
+    setTimeout(() => {
+      setShowToast(false);
+      setToastFading(false);
+    }, 300);
   };
 
   return (
@@ -334,6 +364,17 @@ export default function Products() {
           </div>
         </section>
       </div>
+
+      {(showToast || toastFading) && (
+        <div className={`toast ${toastFading ? 'fade-out' : ''}`} role="status" aria-live="polite">
+          <button type="button" className="toast-close" onClick={handleCloseToast} aria-label="Close">
+            ×
+          </button>
+          <div className="toast-title">Success</div>
+          <div className="toast-message">{toastMessage}</div>
+          <div className="toast-progress" />
+        </div>
+      )}
     </div>
   );
 }
