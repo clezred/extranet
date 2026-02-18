@@ -236,6 +236,111 @@ app.post('/api/profile/update', verifyToken, upload.single('avatar'), (req, res)
   });
 });
 
+// Products list
+app.get('/api/products', (req, res) => {
+  const query = `SELECT p.id, p.name, p.image_path, p.description, p.created_at, p.owner_id,
+    u.username AS owner_username
+    FROM products p
+    LEFT JOIN users u ON u.id = p.owner_id
+    ORDER BY p.created_at DESC`;
+
+  db.all(query, [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+// Products create
+app.post('/api/products', verifyToken, (req, res) => {
+  const { name, imagePath, description } = req.body;
+  const ownerId = req.user.userId;
+
+  if (!name) {
+    return res.status(400).json({ error: 'name is required.' });
+  }
+
+  const createdAt = new Date().toISOString();
+  const query = `INSERT INTO products (name, image_path, description, created_at, owner_id)
+    VALUES (?, ?, ?, ?, ?)`;
+
+  db.run(query, [name, imagePath || null, description || null, createdAt, ownerId], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({
+      success: true,
+      id: this.lastID,
+      name,
+      image_path: imagePath || null,
+      description: description || null,
+      created_at: createdAt,
+      owner_id: ownerId
+    });
+  });
+});
+
+// Products update
+app.put('/api/products/:id', verifyToken, (req, res) => {
+  const productId = req.params.id;
+  const { name, imagePath, description } = req.body;
+  const ownerId = req.user.userId;
+
+  if (!name && !imagePath && !description) {
+    return res.status(400).json({ error: 'No fields to update.' });
+  }
+
+  db.get('SELECT owner_id FROM products WHERE id = ?', [productId], (getErr, product) => {
+    if (getErr) return res.status(500).json({ error: getErr.message });
+    if (!product) return res.status(404).json({ error: 'Product not found.' });
+    if (product.owner_id !== ownerId) {
+      return res.status(403).json({ error: 'Not allowed to edit this product.' });
+    }
+
+    const updates = [];
+    const params = [];
+
+    if (name) {
+      updates.push('name = ?');
+      params.push(name);
+    }
+
+    if (imagePath !== undefined) {
+      updates.push('image_path = ?');
+      params.push(imagePath || null);
+    }
+
+    if (description !== undefined) {
+      updates.push('description = ?');
+      params.push(description || null);
+    }
+
+    const updateQuery = `UPDATE products SET ${updates.join(', ')} WHERE id = ?`;
+    params.push(productId);
+
+    db.run(updateQuery, params, function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true });
+    });
+  });
+});
+
+// Products delete
+app.delete('/api/products/:id', verifyToken, (req, res) => {
+  const productId = req.params.id;
+  const ownerId = req.user.userId;
+
+  db.get('SELECT owner_id FROM products WHERE id = ?', [productId], (getErr, product) => {
+    if (getErr) return res.status(500).json({ error: getErr.message });
+    if (!product) return res.status(404).json({ error: 'Product not found.' });
+    if (product.owner_id !== ownerId) {
+      return res.status(403).json({ error: 'Not allowed to delete this product.' });
+    }
+
+    db.run('DELETE FROM products WHERE id = ?', [productId], function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true });
+    });
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server started on http://localhost:${PORT}`);
 });

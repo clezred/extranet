@@ -57,7 +57,7 @@ export default function Signup() {
     // Validate username format
     const usernameRegex = /^[a-z._]+$/;
     if (!usernameRegex.test(username)) {
-      setError('Username can only contain lowercase letters, dots (.) and underscores (_)');
+      setError('Username can only contain lowercase letters, numbers, dots (.) and underscores (_)');
       return;
     }
 
@@ -114,7 +114,7 @@ export default function Signup() {
                 minLength="3"
                 maxLength="32"
                 pattern="[a-z._]+"
-                title="Only lowercase letters, dots (.) and underscores (_) are allowed"
+                title="Only lowercase letters, numbers, dots (.) and underscores (_) are allowed"
               />
               {checkingUsername && <span className="checking">Checking...</span>}
               {usernameError && <span className="unavailable">✗ {usernameError}</span>}

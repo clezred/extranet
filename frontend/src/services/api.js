@@ -117,3 +117,33 @@ export const statusService = {
     return apiCall('/status');
   }
 };
+
+// Products service
+export const productService = {
+  list: async () => {
+    return apiCall('/products');
+  },
+
+  create: async (name, imagePath, description) => {
+    return apiCall('/products', {
+      method: 'POST',
+      requiresAuth: true,
+      body: { name, imagePath, description }
+    });
+  },
+
+  update: async (id, name, imagePath, description) => {
+    return apiCall(`/products/${id}`, {
+      method: 'PUT',
+      requiresAuth: true,
+      body: { name, imagePath, description }
+    });
+  },
+
+  remove: async (id) => {
+    return apiCall(`/products/${id}`, {
+      method: 'DELETE',
+      requiresAuth: true
+    });
+  }
+};

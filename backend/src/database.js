@@ -12,6 +12,8 @@ const db = new sqlite3.Database('./extranet.db', (err) => {
 
 // Init database user table and admin
 db.serialize(() => {
+  db.run('PRAGMA foreign_keys = ON');
+
   db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE,
@@ -21,6 +23,27 @@ db.serialize(() => {
     email TEXT,
     avatar TEXT
   )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    image_path TEXT,
+    description TEXT,
+    created_at TEXT NOT NULL,
+    owner_id INTEGER NOT NULL,
+    FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+  )`);
+
+  db.get("PRAGMA table_info(products)", (err, row) => {
+    if (err || !row) return;
+    db.all("PRAGMA table_info(products)", (listErr, rows) => {
+      if (listErr) return;
+      const hasOwnerId = rows.some((col) => col.name === 'owner_id');
+      if (!hasOwnerId) {
+        db.run("ALTER TABLE products ADD COLUMN owner_id INTEGER");
+      }
+    });
+  });
 
   const stmt = db.prepare("INSERT OR IGNORE INTO users (username, name) VALUES (?, ?)");
   stmt.run("admin", "Administrateur");

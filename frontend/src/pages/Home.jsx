@@ -90,10 +90,17 @@ export default function Home() {
         {loading ? (
           <p className="loading">Loading...</p>
         ) : isLoggedIn && user ? (
-          <div className="welcome-card">
-            <h2>Welcome, {user.name || user.username}!</h2>
+          <div className="home-panels">
+            <div className="welcome-card">
+              <h2>Welcome, {user.name || user.username}!</h2>
 
-            <Link to="/profile" className="btn-primary">Edit My Profile</Link>
+              <Link to="/profile" className="btn-primary">Edit My Profile</Link>
+            </div>
+            <div className="welcome-card">
+              <h2>Products</h2>
+              <p className="welcome-text">Create, update, and manage all products.</p>
+              <Link to="/products" className="btn-primary">Open Products</Link>
+            </div>
           </div>
         ) : (
           <div className="welcome-card">

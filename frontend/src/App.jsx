@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
+import Products from './pages/Products';
 import './App.css';
 
 function App() {
@@ -20,6 +21,15 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="/products" 
+          element={
+            <ProtectedRoute redirectTo="/home">
+              <Products />
             </ProtectedRoute>
           } 
         />
