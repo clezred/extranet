@@ -7,6 +7,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
+      - VITE_API_BASE_URL=http://10.1.0.32:5000/api
       - CHOKIDAR_USEPOLLING=true
     depends_on:
       - backend
@@ -19,3 +20,6 @@ services:
       - ./backend:/app
       - /app/node_modules
       - ./backend/uploads:/app/uploads
+    environment:
+      - CORS_ORIGINS=http://10.1.0.32:5173
+      - PUBLIC_BASE_URL=http://10.1.0.32:5000
