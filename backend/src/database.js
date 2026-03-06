@@ -21,7 +21,7 @@ db.serialize(() => {
     name TEXT,
     surname TEXT,
     email TEXT,
-    group TEXT NOT NULL,
+    group_id TEXT NOT NULL,
     avatar TEXT
   )`);
 
@@ -34,7 +34,7 @@ db.serialize(() => {
     owner_id INTEGER NOT NULL,
     group_id TEXT NOT NULL,
     FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES users(group) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES users(group_id) ON DELETE CASCADE,
   )`);
 
   db.get("PRAGMA table_info(products)", (err, row) => {
@@ -48,7 +48,7 @@ db.serialize(() => {
     });
   });
 
-  const stmt = db.prepare("INSERT OR IGNORE INTO users (username, name, group) VALUES (?, ?, ?)");
+  const stmt = db.prepare("INSERT OR IGNORE INTO users (username, name, group_id) VALUES (?, ?, ?)");
   stmt.run("admin", "Administrateur", "admin");
   stmt.finalize();
   const passwordClair = "admin123";
@@ -62,11 +62,11 @@ db.serialize(() => {
   const user1 = "user1@demo.fr";
   const user2 = "user2@demo.fr";
 
-  const stmtU1 = db.prepare("INSERT OR IGNORE INTO users (username, name, email, group) VALUES (?, ?, ?, ?)");
+  const stmtU1 = db.prepare("INSERT OR IGNORE INTO users (username, name, email, group_id) VALUES (?, ?, ?, ?)");
   stmtU1.run(user1, "Utilisateur1", user1, "user1");
   stmtU1.finalize();
 
-  const stmtU2 = db.prepare("INSERT OR IGNORE INTO users (username, name, email, group) VALUES (?, ?, ?, ?)");
+  const stmtU2 = db.prepare("INSERT OR IGNORE INTO users (username, name, email, group_id) VALUES (?, ?, ?, ?)");
   stmtU2.run(user2, "Utilisateur2", user2, "user2");
   stmtU2.finalize();
 

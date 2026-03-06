@@ -130,9 +130,9 @@ app.post('/api/register', async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const query = `INSERT INTO users (username, password, name, surname, email, group, avatar) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    const query = `INSERT INTO users (username, password, name, surname, email, group_id, avatar) VALUES (?, ?, ?, ?, ?, ?, ?)`;
     
-    db.run(query, [username, hashedPassword, name, surname, email, username, defaultAvatarPath], function(err) {//username as group
+    db.run(query, [username, hashedPassword, name, surname, email, username, defaultAvatarPath], function(err) {//username as group_id
       if (err) {
         if (err.message.includes("UNIQUE constraint failed")) {
           return res.status(400).json({ error: "This username is already taken" });
@@ -254,17 +254,17 @@ app.get('/api/products', verifyToken, (req, res) => {
   const userId = req.user.userId;
 
   // First get the user's group
-  db.get('SELECT group FROM users WHERE id = ?', [userId], (err, user) => {
+  db.get('SELECT group_id FROM users WHERE id = ?', [userId], (err, user) => {
     if (err) return res.status(500).json({ error: err.message });
     if (!user) return res.status(404).json({ error: 'User not found.' });
 
-    const userGroup = user.group;
+    const userGroup = user.group_id;
 
     // Then get products from the same group
     const query = `SELECT p.id, p.name, p.image_path, p.description, p.created_at, p.owner_id,
       u.username AS owner_username
       FROM products p
-      LEFT JOIN users u ON u.group = p.group_id
+      LEFT JOIN users u ON u.group_id = p.group_id
       WHERE p.group_id = ?
       ORDER BY p.created_at DESC`;
 
