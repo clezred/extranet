@@ -261,11 +261,11 @@ app.get('/api/products', verifyToken, (req, res) => {
     const userGroup = user.group_id;
 
     // Then get products from the same group
-    const query = `SELECT p.id, p.name, p.image_path, p.description, p.created_at, p.owner_id,
+    const query = `SELECT p.id, p.name, p.image_path, p.description, p.created_at, p.owner_id, p.gid,
       u.username AS owner_username
       FROM products p
-      LEFT JOIN users u ON u.group_id = p.group_id
-      WHERE p.group_id = ?
+      LEFT JOIN users u ON u.group_id = p.id
+      WHERE p.gid = ?
       ORDER BY p.created_at DESC`;
 
     db.all(query, [userGroup], (err, rows) => {
