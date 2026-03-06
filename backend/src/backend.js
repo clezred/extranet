@@ -36,7 +36,8 @@ const productStorage = multer.diskStorage({
 const uploadAvatar = multer({ storage: avatarStorage });
 const uploadProductImage = multer({ storage: productStorage });
 
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static('uploads')); // pas secure mais c'est marrant
+app.use('/public', express.static('public'));
 
 const SECRET_KEY = "IUGGEOZIJFPZFJUVEBOZNOIHPMAQNXBCJFILZPPS";
 
@@ -129,9 +130,9 @@ app.post('/api/register', async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const query = `INSERT INTO users (username, password, name, surname, email, avatar) VALUES (?, ?, ?, ?, ?, ?)`;
+    const query = `INSERT INTO users (username, password, name, surname, email, group, avatar) VALUES (?, ?, ?, ?, ?, ?, ?)`;
     
-    db.run(query, [username, hashedPassword, name, surname, email, defaultAvatarPath], function(err) {
+    db.run(query, [username, hashedPassword, name, surname, email, username, defaultAvatarPath], function(err) {//username as group
       if (err) {
         if (err.message.includes("UNIQUE constraint failed")) {
           return res.status(400).json({ error: "This username is already taken" });
@@ -249,16 +250,28 @@ app.post('/api/profile/update', verifyToken, uploadAvatar.single('avatar'), (req
 });
 
 // Products list
-app.get('/api/products', (req, res) => {
-  const query = `SELECT p.id, p.name, p.image_path, p.description, p.created_at, p.owner_id,
-    u.username AS owner_username
-    FROM products p
-    LEFT JOIN users u ON u.id = p.owner_id
-    ORDER BY p.created_at DESC`;
+app.get('/api/products', verifyToken, (req, res) => {
+  const userId = req.user.userId;
 
-  db.all(query, [], (err, rows) => {
+  // First get the user's group
+  db.get('SELECT group FROM users WHERE id = ?', [userId], (err, user) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    const userGroup = user.group;
+
+    // Then get products from the same group
+    const query = `SELECT p.id, p.name, p.image_path, p.description, p.created_at, p.owner_id,
+      u.username AS owner_username
+      FROM products p
+      LEFT JOIN users u ON u.group = p.group_id
+      WHERE p.group_id = ?
+      ORDER BY p.created_at DESC`;
+
+    db.all(query, [userGroup], (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows);
+    });
   });
 });
 

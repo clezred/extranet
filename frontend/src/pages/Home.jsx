@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { profileService, authService } from '../services/api';
+import { profileService, authService, ASSET_BASE_URL } from '../services/api';
 import './Home.css';
+
+// Configure your PDF download link here
+const PDF_DOWNLOAD_URL = ASSET_BASE_URL + "public/pdf/Infoquantique.pdf";
 
 export default function Home() {
   const [user, setUser] = useState(null);
@@ -100,6 +103,11 @@ export default function Home() {
               <h2>Products</h2>
               <p className="welcome-text">Create, update, and manage all products.</p>
               <Link to="/products" className="btn-primary">Open Products</Link>
+            </div>
+            <div className="welcome-card">
+              <h2>Download Resources</h2>
+              <p className="welcome-text">Access important documentation and resources.</p>
+              <a href={PDF_DOWNLOAD_URL} className="btn-primary" download>Download PDF</a>
             </div>
           </div>
         ) : (

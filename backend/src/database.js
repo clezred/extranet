@@ -16,11 +16,12 @@ db.serialize(() => {
 
   db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE,
+    username TEXT UNIQUE NOT NULL,
     password TEXT,
     name TEXT,
     surname TEXT,
     email TEXT,
+    group TEXT NOT NULL,
     avatar TEXT
   )`);
 
@@ -31,7 +32,9 @@ db.serialize(() => {
     description TEXT,
     created_at TEXT NOT NULL,
     owner_id INTEGER NOT NULL,
-    FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+    group_id TEXT NOT NULL,
+    FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES users(group) ON DELETE CASCADE,
   )`);
 
   db.get("PRAGMA table_info(products)", (err, row) => {
@@ -45,8 +48,8 @@ db.serialize(() => {
     });
   });
 
-  const stmt = db.prepare("INSERT OR IGNORE INTO users (username, name) VALUES (?, ?)");
-  stmt.run("admin", "Administrateur");
+  const stmt = db.prepare("INSERT OR IGNORE INTO users (username, name, group) VALUES (?, ?, ?)");
+  stmt.run("admin", "Administrateur", "admin");
   stmt.finalize();
   const passwordClair = "admin123";
 
@@ -55,22 +58,23 @@ db.serialize(() => {
   });
 
   // Required users for Pentest
-  const stmtU1 = db.prepare("INSERT OR IGNORE INTO users (username, name, email) VALUES (?, ?, ?)");
-  stmtU1.run("user1@demo.fr", "Utilisateur1", "user1@demo.fr");
+
+  const user1 = "user1@demo.fr";
+  const user2 = "user2@demo.fr";
+
+  const stmtU1 = db.prepare("INSERT OR IGNORE INTO users (username, name, email, group) VALUES (?, ?, ?, ?)");
+  stmtU1.run(user1, "Utilisateur1", user1, "user1");
   stmtU1.finalize();
 
-  const stmtU2 = db.prepare("INSERT OR IGNORE INTO users (username, name, email) VALUES (?, ?, ?)");
-  stmtU2.run("user2@demo.fr", "Utilisateur2", "user2@demo.fr");
+  const stmtU2 = db.prepare("INSERT OR IGNORE INTO users (username, name, email, group) VALUES (?, ?, ?, ?)");
+  stmtU2.run(user2, "Utilisateur2", user2, "user2");
   stmtU2.finalize();
 
-  const passwordClairU1 = "user1@demo.fr";
-  const passwordClairU2 = "user2@demo.fr";
-
-  bcrypt.hash(passwordClairU1, saltRounds, (err, hash) => {
-    db.run("UPDATE users SET password =  ? WHERE username = ?", [hash, "user1@demo.fr"]);
+  bcrypt.hash(user1, saltRounds, (err, hash) => {
+    db.run("UPDATE users SET password =  ? WHERE username = ?", [hash, user1]);
   });
-  bcrypt.hash(passwordClairU2, saltRounds, (err, hash) => {
-    db.run("UPDATE users SET password =  ? WHERE username = ?", [hash, "user2@demo.fr"]);
+  bcrypt.hash(user2, saltRounds, (err, hash) => {
+    db.run("UPDATE users SET password =  ? WHERE username = ?", [hash, user2]);
   });
 });
 
