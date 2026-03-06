@@ -4,7 +4,7 @@ import { profileService, authService, ASSET_BASE_URL } from '../services/api';
 import './Home.css';
 
 // Configure your PDF download link here
-const PDF_DOWNLOAD_URL = ASSET_BASE_URL + "public/pdf/Infoquantique.pdf";
+const PDF_DOWNLOAD_URL = ASSET_BASE_URL + "/public/pdf/Infoquantique.pdf";
 
 export default function Home() {
   const [user, setUser] = useState(null);

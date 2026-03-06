@@ -121,7 +121,7 @@ export const statusService = {
 // Products service
 export const productService = {
   list: async () => {
-    return apiCall('/products');
+    return apiCall('/products', { requiresAuth: true });
   },
 
   create: async (name, imageFile, description) => {
