@@ -34,7 +34,7 @@ db.serialize(() => {
     owner_id INTEGER NOT NULL,
     group_id TEXT NOT NULL,
     FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES users(group_id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES users(group_id) ON DELETE CASCADE
   )`);
 
   db.get("PRAGMA table_info(products)", (err, row) => {
