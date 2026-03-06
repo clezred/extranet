@@ -264,7 +264,7 @@ app.get('/api/products', verifyToken, (req, res) => {
     const query = `SELECT p.id, p.name, p.image_path, p.description, p.created_at, p.owner_id, p.gid,
       u.username AS owner_username
       FROM products p
-      LEFT JOIN users u ON u.group_id = p.id
+      LEFT JOIN users u ON u.group_id = p.gid
       WHERE p.gid = ?
       ORDER BY p.created_at DESC`;
 
