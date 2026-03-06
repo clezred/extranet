@@ -279,6 +279,7 @@ app.get('/api/products', verifyToken, (req, res) => {
 app.post('/api/products', verifyToken, uploadProductImage.single('image'), (req, res) => {
   const { name, description } = req.body;
   const ownerId = req.user.userId;
+  const gid = req.user.username;
 
   if (!name) {
     return res.status(400).json({ error: 'name is required.' });
@@ -286,10 +287,10 @@ app.post('/api/products', verifyToken, uploadProductImage.single('image'), (req,
 
   const createdAt = new Date().toISOString();
   const imagePath = req.file ? `/uploads/products/${req.file.filename}` : null;
-  const query = `INSERT INTO products (name, image_path, description, created_at, owner_id)
-    VALUES (?, ?, ?, ?, ?)`;
+  const query = `INSERT INTO products (name, image_path, description, created_at, owner_id, gid)
+    VALUES (?, ?, ?, ?, ?, ?)`;
 
-  db.run(query, [name, imagePath, description || null, createdAt, ownerId], function(err) {
+  db.run(query, [name, imagePath, description || null, createdAt, ownerId, gid], function(err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({
       success: true,
@@ -298,7 +299,8 @@ app.post('/api/products', verifyToken, uploadProductImage.single('image'), (req,
       image_path: imagePath,
       description: description || null,
       created_at: createdAt,
-      owner_id: ownerId
+      owner_id: ownerId,
+      gid: gid
     });
   });
 });
